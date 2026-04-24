@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  openclaw-moe:
+    build:
+      context: /home/kugli/OpenClaw-MoE-Orchestrator
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - OLLAMA_URL=http://ollama:11434
+      - HF_TOKEN=${HF_TOKEN}
+    depends_on:
+      - ollama
+
+  claude-agent:
+    build:
+      context: /home/kugli/claude-consciousness
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
+      - CLAW_TOKEN=${CLAW_TOKEN}
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/ollama/models
+
+  mlflow:
+    image: python:3.12-slim
+    working_dir: /app
+    command: mlflow server --host 0.0.0.0 --port 5000
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlflow-data:/app/mlruns
+    environment:
+      - MLFLOW_TRACKING_URI=http://localhost:5000
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+
+volumes:
+  ollama_data:
