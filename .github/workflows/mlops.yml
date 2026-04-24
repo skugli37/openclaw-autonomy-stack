@@ -1,0 +1,29 @@
+name: MLOps Pipeline
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'mlops/**'
+      - 'models/**'
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install mlflow huggingface_hub
+      - name: Run training
+        run: |
+          python mlops/train.py
+      - name: Upload artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trained-model
+          path: models/

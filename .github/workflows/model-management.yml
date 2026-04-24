@@ -1,0 +1,22 @@
+name: Model Management
+
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: 'Model to download'
+        required: true
+        default: 'Qwen/Qwen2.5-72B-Instruct'
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download model
+        run: |
+          pip install huggingface_hub
+          huggingface-cli download ${{ github.event.inputs.model }} --local-dir ./models
+      - name: Upload to HF
+        if: success()
+        run: |
+          huggingface-cli upload ${{ secrets.HF_REPO }} ./models
